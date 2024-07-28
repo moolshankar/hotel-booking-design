@@ -1,0 +1,670 @@
+openapi: 3.0.0
+info:
+  version: '1.0'
+  title: Hotel Booking Platform
+  description: >-
+    Hotel Booking Platform that enables users to search for hotels, make
+    bookings, view booking details, and cancel bookings
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: "https://mockserver/api/v1"
+
+tags:
+  - name: authentication
+    description: User login
+  - name: search
+    description: Hotel search api
+  - name: booking
+    description: Manage bookings
+    
+security: 
+  - BearerAuth: []
+  
+paths:
+  /auth/login:
+    post:
+      tags:
+        - authentication
+      summary: User login
+      description: Login to generate auth token
+      requestBody:
+        description: Provide username and password to login
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: User's username
+                password:
+                  type: string
+                  format: password
+                  description: User's password
+              required: 
+                - username
+                - password
+              example:
+                  username : "ramesh123"
+                  password: "Solo@321"
+
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                example:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9FG45bkjb"
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          description: Success
+
+  /search/hotels/:
+    get:
+      tags:
+        - search
+      summary: Search hotels
+      description: Returns the list of hotels
+      parameters:
+        - name: country
+          in: query
+          description: Search country
+          schema:
+            type: string
+            default: 'india'
+          required: true
+        - name: location
+          in: query
+          description: Search location
+          schema:
+            type: string
+            default: 'delhi'
+          required: true
+        - name: name
+          in: query
+          description: Hotel name
+          schema:
+            type: string
+            default: 'taj'
+        - name: checkin
+          in: query
+          description: Checkin date
+          schema:
+            type: string
+            default: '2024-08-27'
+          required: true
+        - name: checkout
+          in: query
+          description: Checkout Date
+          schema:
+            type: string
+            default: '2024-08-31'
+          required: true
+        - name: rooms
+          in: query
+          description: Rooms required
+          schema:
+            type: number
+            default: 1
+          required: true
+        - name: page
+          in: query
+          description: Search result page number
+          schema:
+            type: number
+            default: 1
+          required: true
+        - name: size
+          in: query
+          description: Number of records to fetch per page
+          schema:
+            type: number
+            default: 20
+          required: true
+        - name: sortBy
+          in: query
+          description: Sort by
+          schema:
+            type: string
+            default: price
+            enum:
+              - price
+              - name
+              - availability
+          required: true
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            default: asc
+            enum:
+              - asc
+              - desc
+          required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hotel'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+
+  /search/hotels/{id}:
+    get:
+      tags:
+        - search
+      summary: Get hotel details
+      description: Get details for a selected hotel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Hotel id to get details
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Hotel'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+
+  /search/hotels/{id}/room-type:
+    get:
+      tags:
+        - search
+      summary: Get all room types
+      description: Returns the list of rooms types for selected hotel
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Hotel id to get rooms
+          schema:
+            type: number
+            default: 1
+        - name: page
+          in: query
+          description: Search result page number
+          schema:
+            type: number
+            default: 1
+          required: true
+        - name: size
+          in: query
+          description: Number of records to fetch per page
+          schema:
+            type: number
+            default: 20
+          required: true
+        - name: sortBy
+          in: query
+          description: Sort by
+          schema:
+            type: string
+            default: price
+            enum:
+              - price
+              - type
+          required: true
+        - name: sortOrder
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            default: asc
+            enum:
+              - asc
+              - desc
+          required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomType'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+
+  /search/hotels/{hotel_id}/room-type/{room_type_id}:
+    get:
+      tags:
+        - search
+      summary: Get room type details
+      description: Get details for a selected room type
+      parameters:
+        - in: path
+          name: hotel_id
+          required: true
+          description: Hotel id to get details
+          schema:
+            type: number
+            default: 1
+        - in: path
+          name: room_type_id
+          required: true
+          description: Room type id to get details
+          schema:
+            type: number
+            default: 1
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomType'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+          
+  /bookings:
+    get:
+      tags:
+        - booking
+      summary: Get all the bookings
+      description: Returns the list of bookings
+      parameters:
+        - name: fromdate
+          in: query
+          description: From date
+          schema:
+            type: string
+            format: date
+            default: '2024-08-27'
+        - name: todate
+          in: query
+          description: Till Date
+          schema:
+            type: string
+            format: date
+            default: '2024-08-31'
+        - name: page
+          in: query
+          description: Search result page number
+          schema:
+            type: number
+            default: 1
+          required: true
+        - name: size
+          in: query
+          description: Records per page
+          schema:
+            type: number
+            default: 20
+          required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+    post:
+      tags:
+        - booking
+      summary: Create a new booking
+      description: Creates a new booking in the system and returns the added booking
+      requestBody:
+        description: Request body to create new booking
+        required: true
+        content:
+          application/json:
+              schema:
+                type: object
+                properties:
+                  request_id:
+                    type: string
+                    example:
+                      "trx76dger"
+                  hotel_id:
+                    type: number
+                    example:
+                      1
+                  room_type_id:
+                    type: number
+                    example:
+                      1
+                  check_in_date:
+                    type: string
+                    format: date
+                    example:
+                      "2024-10-21"
+                  check_out_date:
+                    type: string
+                    format: date
+                    example:
+                      "2024-10-25"
+                  rooms:
+                    type: integer
+                    example:
+                      3
+      responses:
+        '201':
+          $ref: '#/components/responses/BookingSuccess'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+            
+
+  /bookings/{id}:
+    get:
+      tags:
+        - booking
+      summary: Get booking details
+      description: Get details for a selected booking
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Booking id to get details
+          schema:
+            type: number
+            default: 101
+      responses:
+        '200':
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+
+    delete:
+      tags:
+        - booking
+      summary: Cancel a booking
+      description: Cancel an exiting booking
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Booking id to delete
+          schema:
+            type: number
+            default: 101
+      responses:
+        '204':
+          description: Booking cancelled successfully
+        '5XX':
+          $ref: '#/components/responses/InternalServerError'
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '403':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/DefaultResponse'
+  
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    RoomType:
+      type: object
+      description: Represents a hotel room description
+      properties:
+        id:
+          type: number
+          description: Unique id for room
+        hotel_id:
+          type: string
+          description: Hotel id room located in
+        type:
+          type: string
+          description: Type of room
+        ammenities:
+          type: string
+          description: Ammenities description
+        guests_capacity:
+          type: number
+          description: Max guests allowed in one rooms
+        price_per_night:
+          type: number
+          description: Room price per night
+      example:
+        id: 1
+        hotel_id: 1
+        type: "premium"
+        ammenities: "Pool facing"
+        guests_capacity: 2
+        price_per_night: 3400
+        
+    Hotel:
+      type: object
+      description: Represents a Hotel Description
+      properties:
+        id:
+          type: number
+          description: Unique ID of the hotel
+        name:
+          type: string
+          description: Name of the Hotel
+        location:
+          type: string
+          description: Location of the hotel
+        country:
+          type: string
+          description: Country of the hotel
+        featuredPrice:
+          type: number
+          description: Featured price displayed in search
+        availability:
+          type: string
+          enum:
+            - Availalable
+            - Not Availalable
+            - Booked
+      example: 
+        id: 1
+        name: "Taj Hotel"
+        location: "Delhi"
+        country: "India"
+        featuredPrice: 3200
+        availability: "Available"
+        
+    Booking:
+      type: object
+      description: Represents a Booking entry
+      properties:
+        id:
+          type: number
+          description: Unique id of the Booking
+        hotel_id:
+          type: string
+          description: Hotel id
+        room_type_id:
+          type: string
+          description: Room type id
+        rooms:
+          type: number
+          description: Number of rooms
+        check_in:
+          type: string
+          format: date
+          description: Checkin date of the Booking
+        check_out:
+          type: string
+          format: date
+          description: Checkout date of the Booking
+        amount:
+          type: number
+          description: Booking amount
+        status:
+          type: string
+          enum:
+            - Awaiting
+            - Confirmed
+            - Cancelled
+        hotel:
+          $ref: '#/components/schemas/Hotel'
+      required: 
+        - guests
+        - hotel_id
+        - check_in
+        - check_out
+      example: 
+        id: 101
+        hotel_id: 1
+        room_type_id: 1
+        rooms: 3
+        check_in: '2024-10-21'
+        check_out: '2024-10-25'
+        amount: 36000
+        status: "Confirmed"
+
+  responses:
+    BookingSuccess:
+      description: Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Booking'
+            
+    InvalidCredentials:
+      description: Username or password is invalid.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: "Login failed. Username or password is incorrect."
+            
+    UnauthorizedError:
+      description: Unauthorized access
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: "Apologies, you do not have permission to access this data."
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: "Requested resource is not available"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: "Internal server error, please reach out to customer care"
+
+    DefaultResponse:
+      description: Unknow Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              message: "Unknown error occured."
